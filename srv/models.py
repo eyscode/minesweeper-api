@@ -31,7 +31,7 @@ def reveal_cell(mines_list, rows, cols, state, row, col):
         for j in range(j_left, j_right + 1):
             if i == row and j == col:
                 continue
-            if state[i][j] != '-':
+            if isinstance(state[i][j], int):
                 continue
             neighbors_list.append((i, j))
 
@@ -187,8 +187,8 @@ class Board(Base):
         state = copy.deepcopy(self.state)
         for row in range(self.rows):
             for col in range(self.columns):
-                if self.state[row][col] == '-' and [row, col] in self.mines_list:
+                if self.state[row][col] == '-':
                     return False, None
-                elif self.state[row][col] != '*' and [row, col] in self.mines_list:
+                elif self.state[row][col] not in ('*', 'F') and [row, col] in self.mines_list:
                     state[row][col] = 'x'
         return True, state
