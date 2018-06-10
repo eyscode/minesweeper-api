@@ -8,7 +8,7 @@ def parse_args(klass, context=None):
         schema = klass()
         if context:
             schema.context.update(context)
-        return klass().load(request.get_json() or {})
+        return schema.load(request.get_json() or {})
     except ValidationError as err:
         abort(400, **err.messages)
 
