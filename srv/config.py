@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 
 def load_config():
     config_class = get_config_class()
@@ -23,6 +25,7 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    JWT_EXPIRATION_DELTA = timedelta(seconds=300)
 
 
 class ProductionConfig(Config):
@@ -33,3 +36,4 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'postgresql://minesweeper@localhost:5432/minesweeper'
     DEVELOPMENT = True
     DEBUG = True
+    JWT_EXPIRATION_DELTA = timedelta(seconds=6000)
