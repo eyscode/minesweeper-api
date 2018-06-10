@@ -1,8 +1,10 @@
-from flask_restful import Resource
+from sqlalchemy.orm.attributes import flag_modified
+from flask_restful import Resource, abort
 from flask_jwt import jwt_required, current_identity
 from flask_restful_swagger_2 import swagger
-from .utils import get_object_or_404
-from .schemas import RegisterUserSchema, UserSchema, CreateBoardSchema, CreatedBoardSchema, BoardSchema
+from .utils import get_object_or_404, check_ownership
+from .schemas import RegisterUserSchema, UserSchema, CreateBoardSchema, CreatedBoardSchema, BoardSchema, \
+    RevealOrFlagSchema
 from . import database as db
 from .models import User, Board
 from .utils import parse_args, serialize
@@ -87,4 +89,69 @@ class SingleBoardResource(Resource):
 
     def get(self, id):
         board = get_object_or_404(db.session, id, Board)
+        check_ownership(board, current_identity)
         return serialize(board, BoardSchema)
+
+
+class RevealResource(Resource):
+    decorators = [jwt_required()]
+
+    def post(self, board_id):
+        board = get_object_or_404(db.session, board_id, Board)
+        check_ownership(board, current_identity)
+        args = parse_args(RevealOrFlagSchema, context={'board': board})
+        ok, message = board.reveal(args.get('row'), args.get('column'))
+        if ok:
+            flag_modified(board, "last_plays_state")
+            db.session.flush()
+            db.session.commit()
+            return serialize(board, BoardSchema)
+        else:
+            abort(400, message=message)
+
+
+class FlagResource(Resource):
+    decorators = [jwt_required()]
+
+    def post(self, board_id):
+        board = get_object_or_404(db.session, board_id, Board)
+        check_ownership(board, current_identity)
+        args = parse_args(RevealOrFlagSchema, context={'board': board})
+        ok, message = board.flag(args.get('row'), args.get('column'))
+        if ok:
+            flag_modified(board, "last_plays_state")
+            db.session.flush()
+            db.session.commit()
+            return serialize(board, BoardSchema)
+        else:
+            abort(400, message=message)
+
+
+class PauseBoardResource(Resource):
+    decorators = [jwt_required()]
+
+    def post(self, board_id):
+        board = get_object_or_404(db.session, board_id, Board)
+        check_ownership(board, current_identity)
+        ok, message = board.pause()
+        if ok:
+            db.session.flush()
+            db.session.commit()
+            return {"message": 'Successfully paused'}
+        else:
+            abort(400, message=message)
+
+
+class ResumeBoardResource(Resource):
+    decorators = [jwt_required()]
+
+    def post(self, board_id):
+        board = get_object_or_404(db.session, board_id, Board)
+        check_ownership(board, current_identity)
+        ok, message = board.resume()
+        if ok:
+            db.session.flush()
+            db.session.commit()
+            return {"message": 'Successfully resumed'}
+        else:
+            abort(400, message=message)

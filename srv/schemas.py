@@ -39,7 +39,26 @@ class BoardSchema(Schema):
     id = fields.String()
     created_date = fields.DateTime()
     ended_date = fields.DateTime()
+    resume_date = fields.DateTime()
+    elapsed_time = fields.TimeDelta()
     status = fields.String()
     result = fields.String()
     owner = fields.Nested(UserSchema)
     state = fields.Function(lambda o: o.state)
+
+
+class RevealOrFlagSchema(Schema):
+    row = fields.Integer(required=True)
+    col = fields.Integer(required=True)
+
+    @validates('row')
+    def validate_row(self, value):
+        board = self.context.get('board')
+        if value >= board.rows:
+            raise ValidationError('row out of range')
+
+    @validates('col')
+    def validate_col(self, value):
+        board = self.context.get('board')
+        if value >= board.columns:
+            raise ValidationError('col out of range')

@@ -1,3 +1,4 @@
+import copy
 import random
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -15,6 +16,36 @@ def generate_id():
     u = uuid.uuid4()
     b = base64.b32encode(u.bytes)
     return b[0:18].decode('utf-8')
+
+
+def reveal_cell(mines_list, rows, cols, state, row, col):
+    i_top = row - 1 if row > 0 else row
+    j_left = col - 1 if col > 0 else col
+    i_bottom = row + 1 if row < rows - 1 else row
+    j_right = col + 1 if col < cols - 1 else col
+
+    neighbor_mines = 0
+    neighbors_list = []
+
+    for i in range(i_top, i_bottom + 1):
+        for j in range(j_left, j_right + 1):
+            if i == row and j == col:
+                continue
+            if state[i][j] != '-':
+                continue
+            neighbors_list.append((i, j))
+
+    for i, j in neighbors_list:
+        if [i, j] in mines_list:
+            neighbor_mines += 1
+
+    state[row][col] = neighbor_mines
+
+    if neighbor_mines == 0:
+        for i, j in neighbors_list:
+            state = reveal_cell(mines_list, rows, cols, state, i, j)
+
+    return state
 
 
 class User(Base):
@@ -41,7 +72,8 @@ class Board(Base):
 
     id = sa.Column(sa.Unicode(25), primary_key=True, default=generate_id)
     created_date = sa.Column(sa.DateTime, nullable=False, default=datetime.utcnow)
-    paused_date = sa.Column(sa.DateTime, nullable=True, default=None)
+    resume_date = sa.Column(sa.DateTime, nullable=True, default=None)
+    elapsed_time = sa.Column(sa.Interval, nullable=True, default=None)
     ended_date = sa.Column(sa.DateTime, nullable=True, default=None)
     status = sa.Column(sa.Unicode(10), nullable=False, default='active')
     rows = sa.Column(sa.Integer(), nullable=False)
@@ -77,3 +109,83 @@ class Board(Base):
             if [rand_row, rand_column] not in self.mines_list:
                 self.mines_list.append([rand_row, rand_column])
                 mines -= 1
+
+    def check_active_status(self, archived_message='This board is archived. Game is over',
+                            paused_message='This board is paused. Resume it in order to continue playing'):
+        if self.status == 'archived':
+            return False, archived_message
+        elif self.status == 'paused':
+            return False, paused_message
+        return True, None
+
+    def pause(self):
+        active, message = self.check_active_status(paused_message='This board is already paused')
+        if active:
+            if not self.elapsed_time:
+                self.elapsed_time = datetime.utcnow() - self.created_date
+            else:
+                last_elapsed_time = datetime.utcnow() - self.resume_date
+                self.elapsed_time = self.elapsed_time + last_elapsed_time
+            self.status = 'paused'
+            return True, None
+        return False, message
+
+    def resume(self):
+        if self.status == 'paused':
+            self.status = 'active'
+            self.resume_date = datetime.utcnow()
+            return True, None
+        elif self.status == 'active':
+            return False, "Can't pause an {} board".format(self.status)
+
+    def flag(self, i, j):
+        active, message = self.check_active_status()
+        if active:
+            if self.state[i][j] == '-':
+                self.update_state(i, j, 'F')
+                return True, message
+            elif self.state[i][j] == 'F':
+                self.update_state(i, j, '-')
+                return True, message
+            else:
+                return False, "Cell in row {} and col {} can't be flagged because is already revealed".format(i, j)
+        return False, message
+
+    def reveal(self, i, j):
+        active, message = self.check_active_status()
+        if active:
+            if self.state[i][j] == '-':
+                if [i, j] in self.mines_list:
+                    self.status = 'archived'
+                    self.result = 'lose'
+                    self.elapsed_time = self.created_date - datetime.utcnow()
+                    self.ended_date = datetime.utcnow()
+                    self.update_state(i, j, '*')
+                    for row, col in self.mines_list:
+                        if self.state[row][col] == '-':
+                            self.update_state(row, col, 'x')
+                else:
+                    self.state = reveal_cell(self.mines_list, self.rows, self.columns, self.state, i, j)
+                    end, new_state = self.check_end_game()
+                    if end:
+                        self.status = 'archived'
+                        self.result = 'win'
+                        self.elapsed_time = self.created_date - datetime.utcnow()
+                        self.ended_date = datetime.utcnow()
+                        self.state = new_state
+                return True, message
+            elif self.state[i][j] == 'F':
+                return False, "Cell in row {} and col {} can't be revealed because is flagged".format(i, j)
+            else:
+                return False, "Cell in row {} and col {} is already revealed"
+        return False, message
+
+    def check_end_game(self):
+        state = copy.deepcopy(self.state)
+        for row in range(self.rows):
+            for col in range(self.columns):
+                if self.state[row][col] == '-' and [row, col] in self.mines_list:
+                    return False, None
+                elif self.state[row][col] != '*' and [row, col] in self.mines_list:
+                    state[row][col] = 'x'
+        return True, state

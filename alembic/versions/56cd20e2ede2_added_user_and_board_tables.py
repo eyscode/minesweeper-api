@@ -29,7 +29,7 @@ def upgrade():
     op.create_table('boards',
     sa.Column('id', sa.Unicode(length=25), nullable=False),
     sa.Column('created_date', sa.DateTime(), nullable=False),
-    sa.Column('paused_date', sa.DateTime(), nullable=True),
+    sa.Column('resume_date', sa.DateTime(), nullable=True),
     sa.Column('ended_date', sa.DateTime(), nullable=True),
     sa.Column('status', sa.Unicode(length=10), nullable=False),
     sa.Column('rows', sa.Integer(), nullable=False),
