@@ -138,9 +138,9 @@ class Board(Base):
         active, message = self.check_active_status()
         if active:
             if self.state[i][j] == '-':
-                self.update_state(i, j, 'F')
+                self.update_state(i, j, 'f')
                 return True, message
-            elif self.state[i][j] == 'F':
+            elif self.state[i][j] == 'f':
                 self.update_state(i, j, '-')
                 return True, message
             else:
@@ -163,10 +163,8 @@ class Board(Base):
                     self.result = 'lose'
                     self.ended_date = datetime.utcnow()
                     self.calculate_elapsed_time()
-                    self.update_state(i, j, '*')
-                    for row, col in self.mines_list:
-                        if self.state[row][col] == '-':
-                            self.update_state(row, col, 'x')
+                    self.update_state(i, j, 'x')
+                    self.check_mines_and_wrong_flags()
                 else:
                     self.state = reveal_cell(self.mines_list, self.rows, self.columns, self.state, i, j)
                     end, new_state = self.check_end_game()
@@ -177,7 +175,7 @@ class Board(Base):
                         self.calculate_elapsed_time()
                         self.state = new_state
                 return True, message
-            elif self.state[i][j] == 'F':
+            elif self.state[i][j] == 'f':
                 return False, "Cell in row {} and col {} can't be revealed because is flagged".format(i, j)
             else:
                 return False, "Cell in row {} and col {} is already revealed"
@@ -189,6 +187,14 @@ class Board(Base):
             for col in range(self.columns):
                 if self.state[row][col] == '-':
                     return False, None
-                elif self.state[row][col] not in ('*', 'F') and [row, col] in self.mines_list:
-                    state[row][col] = 'x'
+                elif self.state[row][col] not in ('x', 'f') and [row, col] in self.mines_list:
+                    state[row][col] = '@'
         return True, state
+
+    def check_mines_and_wrong_flags(self):
+        for row in range(self.rows):
+            for col in range(self.columns):
+                if self.state[row][col] == '-' and [row, col] in self.mines_list:
+                    self.update_state(row, col, '@')
+                elif self.state[row][col] == 'f' and [row, col] not in self.mines_list:
+                    self.update_state(row, col, 'w')

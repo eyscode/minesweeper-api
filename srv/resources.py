@@ -33,7 +33,7 @@ class RegisterResource(Resource):
             }
         ],
         'responses': {
-            '200': {
+            '201': {
                 'description': 'User',
                 'schema': {
                     'type': 'object',
@@ -81,7 +81,7 @@ class BoardsResource(Resource):
         board.generate_mines(mines=args.get('mines'))
         db.session.add(board)
         db.session.commit()
-        return serialize(board, CreatedBoardSchema)
+        return serialize(board, CreatedBoardSchema), 201
 
 
 class SingleBoardResource(Resource):

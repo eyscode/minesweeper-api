@@ -43,7 +43,6 @@ class BoardSchema(Schema):
     elapsed_time = fields.TimeDelta()
     status = fields.String()
     result = fields.String()
-    owner = fields.Nested(UserSchema)
     state = fields.Function(lambda o: o.state)
 
 
