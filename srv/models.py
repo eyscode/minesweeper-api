@@ -121,11 +121,7 @@ class Board(Base):
     def pause(self):
         active, message = self.check_active_status(paused_message='This board is already paused')
         if active:
-            if not self.elapsed_time:
-                self.elapsed_time = datetime.utcnow() - self.created_date
-            else:
-                last_elapsed_time = datetime.utcnow() - self.resume_date
-                self.elapsed_time = self.elapsed_time + last_elapsed_time
+            self.calculate_elapsed_time()
             self.status = 'paused'
             return True, None
         return False, message
@@ -151,6 +147,13 @@ class Board(Base):
                 return False, "Cell in row {} and col {} can't be flagged because is already revealed".format(i, j)
         return False, message
 
+    def calculate_elapsed_time(self):
+        if not self.elapsed_time:
+            self.elapsed_time = datetime.utcnow() - self.created_date
+        else:
+            last_elapsed_time = datetime.utcnow() - self.resume_date
+            self.elapsed_time = self.elapsed_time + last_elapsed_time
+
     def reveal(self, i, j):
         active, message = self.check_active_status()
         if active:
@@ -158,8 +161,8 @@ class Board(Base):
                 if [i, j] in self.mines_list:
                     self.status = 'archived'
                     self.result = 'lose'
-                    self.elapsed_time = self.created_date - datetime.utcnow()
                     self.ended_date = datetime.utcnow()
+                    self.calculate_elapsed_time()
                     self.update_state(i, j, '*')
                     for row, col in self.mines_list:
                         if self.state[row][col] == '-':
@@ -170,8 +173,8 @@ class Board(Base):
                     if end:
                         self.status = 'archived'
                         self.result = 'win'
-                        self.elapsed_time = self.created_date - datetime.utcnow()
                         self.ended_date = datetime.utcnow()
+                        self.calculate_elapsed_time()
                         self.state = new_state
                 return True, message
             elif self.state[i][j] == 'F':
