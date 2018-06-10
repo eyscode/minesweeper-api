@@ -100,7 +100,7 @@ class RevealResource(Resource):
         board = get_object_or_404(db.session, board_id, Board)
         check_ownership(board, current_identity)
         args = parse_args(RevealOrFlagSchema, context={'board': board})
-        ok, message = board.reveal(args.get('row'), args.get('column'))
+        ok, message = board.reveal(args.get('row'), args.get('col'))
         if ok:
             flag_modified(board, "last_plays_state")
             db.session.flush()
@@ -117,7 +117,7 @@ class FlagResource(Resource):
         board = get_object_or_404(db.session, board_id, Board)
         check_ownership(board, current_identity)
         args = parse_args(RevealOrFlagSchema, context={'board': board})
-        ok, message = board.flag(args.get('row'), args.get('column'))
+        ok, message = board.flag(args.get('row'), args.get('col'))
         if ok:
             flag_modified(board, "last_plays_state")
             db.session.flush()
