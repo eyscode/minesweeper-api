@@ -160,7 +160,7 @@ class Board(Base):
             if self.state[i][j] == '-':
                 if [i, j] in self.mines_list:
                     self.status = 'archived'
-                    self.result = 'lose'
+                    self.result = 'lost'
                     self.ended_date = datetime.utcnow()
                     self.calculate_elapsed_time()
                     self.update_state(i, j, 'x')
@@ -185,7 +185,7 @@ class Board(Base):
         state = copy.deepcopy(self.state)
         for row in range(self.rows):
             for col in range(self.columns):
-                if self.state[row][col] == '-':
+                if self.state[row][col] in ('-', 'f') and [row, col] not in self.mines_list:
                     return False, None
                 elif self.state[row][col] not in ('x', 'f') and [row, col] in self.mines_list:
                     state[row][col] = '@'

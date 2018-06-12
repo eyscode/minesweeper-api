@@ -25,7 +25,7 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    JWT_EXPIRATION_DELTA = timedelta(seconds=300)
+    JWT_EXPIRATION_DELTA = timedelta(seconds=60*60*48)
 
 
 class ProductionConfig(Config):

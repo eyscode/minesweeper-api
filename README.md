@@ -1,138 +1,22 @@
-# minesweeper-api
+# Minesweeper API
 
-REST api for playing minesweeper, with persistence and authentication.
+REST api for playing minesweeper, with persistence and authentication. The [online api](https://minesweeper-eys.herokuapp.com) is deployed on a free tier of Heroku, so be aware that sometimes it won't be available.
 
-## Authentication
+This api could be consumed by any kind of clients, e.g here is an [online demo](https://eyscode.github.io/minesweeper-client/) available using this api, its source code can be found [here](https://github.com/eyscode/minesweeper-client).
 
-### POST /register
+## API documentation
 
-Registers a new user.
+A full [API documentation](https://minesweeper-eys.herokuapp.com/documentation.json) is available, just copy & paste in [Swagger Editor](https://editor.swagger.io) in order to visualize it. There is also an [alternative API documentation](DOCS.md) available in this repo. 
 
-+ Body params:
-  + username: string
-  + password: string
+## Decisions taken
 
-+ Response 201:
-  + username: string
-  + registered_on: string
+- Python and Flask were used to build the REST api because of their simplicity.
+- PostgreSQL was used for the persistence layer because of its great relational features and also fields like JSON, which was used for storing mines array and matrix state of the board.
+- For authentication I opted-in for JSON web tokens since this could be used on web or mobile.
+- All resources that change something on db use POST http method. GET is discouraged for this, and it's only used for retrieve data.
+- Minesweeper reveal algorithm uses recursion in order to find neighbors cells to reveal.
 
-### POST /auth
+## Important notes
 
-Gets a json web token.
-
-+ Body params:
-  + username: string
-  + password: string
-
-+ Response 200:
-  + access_token: string
-
-## Game
-
-### POST /boards
-
-Create a new board
-
-+ Body params:
-  + rows: integer
-  + columns: integer
-  + mines: integer
-
-+ Response 201:
-  + id: string (unique ID for the game)
-  + created_date: string
-  + status: string
-    - `active` (game active)
-    - `paused` (game paused)
-    - `archived` (game over)
-
-### GET /boards/{id}
-
-Retrieve an already created board.
-
-+ URL params:
-  + id: string
-
-+ Response 200:
-  + id: string
-  + created_date: string
-  + elapsed_time: string (timedelta of elapsed time, available when game is paused or archived)
-  + ended_date: string (timestamp, available when game is archived)
-  + result: string (available when game is archived)
-    - `win`
-    - `lose`
-  + resume_date: string (timestamp, available when game was resumed at least one time)
-  + state: array (matrix of cells values)
-    - `-` An unrevealed cell
-    - `f` An unrevealed flagged cell
-    - `@` An unflagged cell with a mine in it (only show after a game is won or lost)
-    - `w` A wrong flagged cell with no mine in it (only show after a game is lost)
-    - `x` Last revealed cell with a mine in it (only show after a game is lost)
-    - `1`-`8` The number of neighboring cells that contain a mine.
-  + status: string
-    - `active` (game active)
-    - `paused` (game paused)
-    - `archived` (game over)
-    
-### GET /boards/{id}/pause
-
-Pause an already created board.
-
-+ URL params:
-  + id: string
-
-+ Response 200:
-  + message: string (success message)
-    
-### GET /boards/{id}/resume
-
-Resume an already created board.
-
-+ URL params:
-  + id: string
-
-+ Response 200:
-  + message: string (success message)
-    
-
-### POST /boards/{id}/reveal
-
-Reveals a cell in board.
-
-+ URL params:
-  + id: string (unique ID for the game)
-
-+ Body params:
-  + row: integer (zero based index).
-  + col: integer (zero based index).
-
-+ Response 200:
-  + id: string
-  + created_date: string
-  + elapsed_time: string (timedelta of elapsed time, available when game is paused or archived)
-  + ended_date: string (timestamp, available when game is archived)
-  + result: string (available when game is archived)
-  + resume_date: string (timestamp, available when game was resumed at least one time)
-  + state: array (matrix of cells values)
-  + status: string
-
-### POST /boards/{id}/flag
-
-Flags/Unflags a cell in board.
-
-+ URL params:
-  + id: string (unique ID for the game)
-
-+ Body params:
-  + row: integer (zero based index).
-  + col: integer (zero based index).
-
-+ Response 200:
-  + id: string
-  + created_date: string
-  + elapsed_time: string (timedelta of elapsed time, available when game is paused or archived)
-  + ended_date: string (timestamp, available when game is archived)
-  + result: string (available when game is archived)
-  + resume_date: string (timestamp, available when game was resumed at least one time)
-  + state: array (matrix of cells values)
-  + status: string
+- Validation was key for reveal and flag resources.
+- PostgreSQL does not detect JSON field changes, `flag_modified` was needed for this.

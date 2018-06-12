@@ -14,12 +14,18 @@ def parse_args(klass, context=None):
 
 
 def serialize(obj, klass):
-    schema = klass()
+    many = False
+    if isinstance(obj, list):
+        many = True
+    schema = klass(many=many)
     return schema.dump(obj)
 
 
-def get_object_or_404(session, id, model):
-    o = session.query(model).filter(model.id == id).first()
+def get_object_or_404(session, id, model, for_update=False):
+    query = session.query(model)
+    if for_update:
+        query = query.with_for_update()
+    o = query.filter(model.id == id).first()
     if not o:
         abort(404, message="{} with id '{}' not found".format(model.__name__, id))
     return o

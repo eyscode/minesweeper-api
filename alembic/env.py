@@ -19,6 +19,7 @@ from os.path import abspath, dirname
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from srv.models import Base
+from srv.config import load_config
 
 target_metadata = Base.metadata
 
@@ -28,6 +29,8 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+svr_config = load_config()
+config.set_main_option("sqlalchemy.url", svr_config.SQLALCHEMY_DATABASE_URI)
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.

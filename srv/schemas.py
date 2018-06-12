@@ -29,10 +29,11 @@ class CreateBoardSchema(Schema):
             raise ValidationError('mines total must be less than total cells')
 
 
-class CreatedBoardSchema(Schema):
+class MinimalBoardSchema(Schema):
     id = fields.String()
     created_date = fields.DateTime()
     status = fields.String()
+    result = fields.String()
 
 
 class BoardSchema(Schema):
