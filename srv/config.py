@@ -30,6 +30,7 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
+    PROPAGATE_EXCEPTIONS = True
 
 
 class DevelopmentConfig(Config):
