@@ -47,6 +47,7 @@ class BoardSchema(Schema):
     status = fields.String()
     result = fields.String()
     state = fields.Function(lambda o: o.state)
+    mines = fields.Function(lambda o: len(o.mines_list))
 
 
 class RevealOrFlagSchema(Schema):
