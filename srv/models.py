@@ -132,7 +132,7 @@ class Board(Base):
             self.resume_date = datetime.utcnow()
             return True, None
         elif self.status == 'active':
-            return False, "Can't pause an {} board".format(self.status)
+            return False, "Can't resume an {} board".format(self.status)
 
     def flag(self, i, j):
         active, message = self.check_active_status()

@@ -34,6 +34,8 @@ class MinimalBoardSchema(Schema):
     created_date = fields.DateTime()
     status = fields.String()
     result = fields.String()
+    rows = fields.Integer()
+    columns = fields.Integer()
 
 
 class BoardSchema(Schema):
