@@ -1,3 +1,4 @@
+from marshmallow.utils import isoformat
 from sqlalchemy.orm.attributes import flag_modified
 from flask_restful import Resource, abort
 from flask_jwt import jwt_required, current_identity
@@ -721,7 +722,7 @@ class ResumeBoardResource(Resource):
         check_ownership(board, current_identity)
         ok, message = board.resume()
         if ok:
-            resume_date = board.resume_date.isoformat()
+            resume_date = isoformat(board.resume_date)
             db.session.flush()
             db.session.commit()
             return {"message": 'Successfully resumed', "resume_date": resume_date}
