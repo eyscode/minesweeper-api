@@ -198,3 +198,6 @@ class Board(Base):
                     self.update_state(row, col, '@')
                 elif self.state[row][col] == 'f' and [row, col] not in self.mines_list:
                     self.update_state(row, col, 'w')
+
+    def __repr__(self):
+        return '<Board id={} size={}x{} status={}>'.format(self.id, self.rows, self.columns, self.status)

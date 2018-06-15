@@ -14,16 +14,16 @@ def create_app(config):
     database.init_db(app)
     api.generate_api(app)
     CORS(app)
+    JWT(app, authenticate, identity)
     return app
 
 
 config = load_config()
 app = create_app(config)
-jwt = JWT(app, authenticate, identity)
 
 if __name__ == '__main__':
-    #import logging
-    #logging.basicConfig()
-    #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    # import logging
+    # logging.basicConfig()
+    # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     app.run(host='0.0.0.0', debug=True, port=5001, threaded=True)
